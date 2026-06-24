@@ -2850,6 +2850,7 @@ namespace GMap.NET.WindowsPresentation
             if (_core.IsStarted)
             {
                 _core.OnMapZoomChanged -= ForceUpdateOverlays;
+                _core.OnCurrentPositionChanged -= CoreOnCurrentPositionChanged;
                 Loaded -= GMapControl_Loaded;
                 Dispatcher.ShutdownStarted -= Dispatcher_ShutdownStarted;
                 SizeChanged -= GMapControl_SizeChanged;
