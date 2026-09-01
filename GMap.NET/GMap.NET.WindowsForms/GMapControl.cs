@@ -670,6 +670,42 @@ namespace GMap.NET.WindowsForms
             }
         }
 
+        int _overlayUpdateDeferralDepth;
+        bool _overlayUpdatePending;
+
+        void RequestOverlayUpdate(bool ignoreHoldInvalidation)
+        {
+            if (!Core.IsStarted || (!ignoreHoldInvalidation && HoldInvalidation))
+            {
+                return;
+            }
+
+            if (_overlayUpdateDeferralDepth > 0)
+            {
+                _overlayUpdatePending = true;
+            }
+            else
+            {
+                ForceUpdateOverlays();
+            }
+        }
+
+        void BeginOverlayUpdateDeferral()
+        {
+            _overlayUpdateDeferralDepth++;
+        }
+
+        void EndOverlayUpdateDeferral()
+        {
+            _overlayUpdateDeferralDepth--;
+
+            if (_overlayUpdateDeferralDepth == 0 && _overlayUpdatePending)
+            {
+                _overlayUpdatePending = false;
+                ForceUpdateOverlays();
+            }
+        }
+
         /// <summary>
         ///     updates markers local position
         /// </summary>
@@ -1795,11 +1831,32 @@ namespace GMap.NET.WindowsForms
                         Core.OnMapSizeChanged(Width, Height);
                     }
 
-                    if (!HoldInvalidation && Core.IsStarted)
-                    {
-                        ForceUpdateOverlays();
-                    }
+                    RequestOverlayUpdate(false);
                 }
+            }
+        }
+
+        /// <summary>
+        ///     Updates the map center position and bearing atomically, regenerating overlays at most once after both
+        ///     values have been applied.
+        /// </summary>
+        /// <param name="position">The new map center position.</param>
+        /// <param name="bearing">The new map bearing.</param>
+        public void SetPositionAndBearing(PointLatLng position, float bearing)
+        {
+            BeginOverlayUpdateDeferral();
+            try
+            {
+                Bearing = bearing;
+
+                if (Position != position)
+                {
+                    Position = position;
+                }
+            }
+            finally
+            {
+                EndOverlayUpdateDeferral();
             }
         }
 
@@ -2823,11 +2880,7 @@ namespace GMap.NET.WindowsForms
             set
             {
                 Core.Position = value;
-
-                if (Core.IsStarted)
-                {
-                    ForceUpdateOverlays();
-                }
+                RequestOverlayUpdate(true);
             }
         }
 
