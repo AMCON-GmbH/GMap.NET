@@ -921,6 +921,42 @@ namespace GMap.NET.WindowsPresentation
             ForceUpdateOverlays(ItemsSource);
         }
 
+        int _overlayUpdateDeferralDepth;
+        bool _overlayUpdatePending;
+
+        void RequestOverlayUpdate()
+        {
+            if (!_core.IsStarted)
+            {
+                return;
+            }
+
+            if (_overlayUpdateDeferralDepth > 0)
+            {
+                _overlayUpdatePending = true;
+            }
+            else
+            {
+                ForceUpdateOverlays();
+            }
+        }
+
+        void BeginOverlayUpdateDeferral()
+        {
+            _overlayUpdateDeferralDepth++;
+        }
+
+        void EndOverlayUpdateDeferral()
+        {
+            _overlayUpdateDeferralDepth--;
+
+            if (_overlayUpdateDeferralDepth == 0 && _overlayUpdatePending)
+            {
+                _overlayUpdatePending = false;
+                ForceUpdateOverlays();
+            }
+        }
+
         /// <summary>
         ///     regenerates shape of route
         /// </summary>
@@ -1466,11 +1502,28 @@ namespace GMap.NET.WindowsPresentation
                         _core.OnMapSizeChanged((int)ActualWidth, (int)ActualHeight);
                     }
 
-                    if (_core.IsStarted)
-                    {
-                        ForceUpdateOverlays();
-                    }
+                    RequestOverlayUpdate();
                 }
+            }
+        }
+
+        /// <summary>
+        ///     Updates the map center position and bearing atomically, regenerating overlays at most once after both
+        ///     values have been applied.
+        /// </summary>
+        /// <param name="position">The new map center position.</param>
+        /// <param name="bearing">The new map bearing.</param>
+        public void SetPositionAndBearing(PointLatLng position, float bearing)
+        {
+            BeginOverlayUpdateDeferral();
+            try
+            {
+                Bearing = bearing;
+                Position = position;
+            }
+            finally
+            {
+                EndOverlayUpdateDeferral();
             }
         }
 
@@ -2734,10 +2787,7 @@ namespace GMap.NET.WindowsPresentation
         private void PositionChanged(DependencyPropertyChangedEventArgs e)
         {
             _core.Position = Position;
-            if (_core.IsStarted)
-            {
-                ForceUpdateOverlays();
-            }
+            RequestOverlayUpdate();
         }
 
         [Browsable(false)]
