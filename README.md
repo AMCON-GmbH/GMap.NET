@@ -43,6 +43,19 @@ https://github.com/judero01col/GMap.NET/wiki
 
 # Release Notes
 
+## Version 2.1.9
+
+#### GMap.NET.WinForms
+- Add SetPositionAndBearing for atomic position and bearing updates
+
+#### GMap.NET.WinPresentation
+- Add SetPositionAndBearing for atomic position and bearing updates
+
+## Version 2.1.8
+
+#### GMap.NET.WinPresentation
+- Fix a memory leak caused by an event handler never being removed
+
 ## Version 2.1.6
 
 #### GMap.NET.Core

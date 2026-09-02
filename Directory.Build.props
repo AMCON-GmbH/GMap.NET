@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Company>AMCON Software GmbH</Company>
-    <PackageVersion>2.1.8</PackageVersion>
+    <PackageVersion>2.1.9</PackageVersion>
     <ApplicationVersion>$(PackageVersion).0</ApplicationVersion>
     <Version>$(PackageVersion).0</Version>
     <FileVersion>$(PackageVersion).0</FileVersion>
